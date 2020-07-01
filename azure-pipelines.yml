@@ -10,8 +10,18 @@ variables:
   buildConfiguration: 'Release'
   wwwrootDir: 'Tailspin.SpaceGame.Web/wwwroot'
   dotnetSdkVersion: '3.1.300'
+  env: 'dev'
 
 steps:
+- powershell: |
+    if ($env:Build_SourceBranchName -eq 'master') {
+      Write-Host ##vso[task.setvariable variable=env;isOutput=true]a
+      return
+    } else {
+      Write-Host ##vso[task.setvariable variable=env;isOutput=true]b
+    }      
+  displayName: "Set Env Value"
+
 - task: UseDotNet@2
   displayName: 'Use .NET Core SDK $(dotnetSdkVersion)'
   inputs:
@@ -56,10 +66,8 @@ steps:
 
 - task: WhiteSource Bolt@20
   displayName: 'Run WhiteSource Bolt'
-  condition: |
-    succeeded(),
-    eq(variables['Build.Reason'], 'PullRequest'),
-    eq(variables['System.PullRequest.TargetBranch'], 'master')
+  condition: eq(variables['env'], 'a')
+
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: drop'
